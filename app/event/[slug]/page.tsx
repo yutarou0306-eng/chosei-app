@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, use } from "react";
 import { supabase } from "../../supabase";
+import { useRouter } from "next/navigation";
 
 type Event = {
   id: number;
@@ -27,6 +28,7 @@ const formatDate = (dateStr: string) => {
 
 export default function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [responses, setResponses] = useState<Response[]>([]);
   const [name, setName] = useState("");
@@ -34,6 +36,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     loadEvent();
@@ -80,6 +83,13 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
     loadEvent();
   };
 
+  const handleDelete = async () => {
+    if (!event) return;
+    await supabase.from("responses").delete().eq("event_id", event.id);
+    await supabase.from("events").delete().eq("id", event.id);
+    router.push("/");
+  };
+
   if (!event) return <div className="p-8 text-center text-gray-500">読み込み中...</div>;
 
   const dates: string[] = JSON.parse(event.dates);
@@ -88,7 +98,36 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
-          <a href="/" className="text-sm text-green-500 hover:underline mb-3 inline-block">← トップページに戻る</a>
+          <div className="flex items-center justify-between mb-3">
+            <a href="/" className="text-sm text-green-500 hover:underline">← トップページに戻る</a>
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-sm text-red-400 hover:text-red-600 border border-red-300 rounded-lg px-3 py-1 hover:bg-red-50 transition"
+            >
+              🗑 イベントを削除
+            </button>
+          </div>
+
+          {showDeleteConfirm && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+              <p className="text-red-600 font-medium mb-3">本当に削除しますか？この操作は元に戻せません。</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDelete}
+                  className="bg-red-500 text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-red-600 transition"
+                >
+                  削除する
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-bold hover:bg-gray-300 transition"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </div>
+          )}
+
           <h2 className="text-xl font-bold text-gray-800 mb-1">{event.title}</h2>
           <p className="text-gray-400 text-sm mb-4">回答者 {responses.length}名</p>
 
