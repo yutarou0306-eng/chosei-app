@@ -16,6 +16,15 @@ type Response = {
   comment: string;
 };
 
+const formatDate = (dateStr: string) => {
+  const datePart = dateStr.split(" ")[0];
+  const timePart = dateStr.includes(" ") ? " " + dateStr.split(" ")[1] : "";
+  const [year, month, day] = datePart.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  const youbi = ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
+  return `${month}月${day}日（${youbi}）${timePart}`;
+};
+
 export default function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const [event, setEvent] = useState<Event | null>(null);
@@ -72,33 +81,15 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
   };
 
   if (!event) return <div className="p-8 text-center text-gray-500">読み込み中...</div>;
-const formatDate = (dateStr: string) => {
-  const datePart = dateStr.split(" ")[0];
-  const timePart = dateStr.includes(" ") ? " " + dateStr.split(" ")[1] : "";
-  const [year, month, day] = datePart.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  const youbi = ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
-  return `${month}月${day}日（${youbi}）${timePart}`;
-};
+
   const dates: string[] = JSON.parse(event.dates);
-
-  const getBestIndex = () => {
-    let best = -1, bestIndex = -1;
-    dates.forEach((_, i) => {
-      const count = responses.filter((r) => JSON.parse(r.answers)[i] === "○").length;
-      if (count > best) { best = count; bestIndex = i; }
-    });
-    return bestIndex;
-  };
-
-  const bestIndex = getBestIndex();
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
-         <a href="/" className="text-sm text-green-500 hover:underline mb-3 inline-block">← トップページに戻る</a>
-<h2 className="text-xl font-bold text-gray-800 mb-1">{event.title}</h2>
+          <a href="/" className="text-sm text-green-500 hover:underline mb-3 inline-block">← トップページに戻る</a>
+          <h2 className="text-xl font-bold text-gray-800 mb-1">{event.title}</h2>
           <p className="text-gray-400 text-sm mb-4">回答者 {responses.length}名</p>
 
           <div className="overflow-x-auto">
@@ -112,7 +103,6 @@ const formatDate = (dateStr: string) => {
                   <th className="border border-gray-200 px-3 py-2 text-green-600">○</th>
                   <th className="border border-gray-200 px-3 py-2 text-yellow-500">△</th>
                   <th className="border border-gray-200 px-3 py-2 text-red-400">×</th>
-                  <th className="border border-gray-200 px-3 py-2 text-gray-600">おすすめ</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,10 +110,9 @@ const formatDate = (dateStr: string) => {
                   const maru = responses.filter((r) => JSON.parse(r.answers)[i] === "○").length;
                   const sank = responses.filter((r) => JSON.parse(r.answers)[i] === "△").length;
                   const batu = responses.filter((r) => JSON.parse(r.answers)[i] === "×").length;
-                  const isBest = i === bestIndex && responses.length > 0;
                   return (
-                    <tr key={i} className={isBest ? "bg-green-50" : ""}>
-                      <td className="border border-gray-200 px-3 py-2 font-medium text-gray-700 whitespace-nowrap">{date}</td>
+                    <tr key={i}>
+                      <td className="border border-gray-200 px-3 py-2 font-medium text-gray-700 whitespace-nowrap">{formatDate(date)}</td>
                       {responses.map((r, j) => {
                         const a = JSON.parse(r.answers)[i];
                         return (
@@ -137,9 +126,6 @@ const formatDate = (dateStr: string) => {
                       <td className="border border-gray-200 px-3 py-2 text-center text-green-600 font-bold">{maru}人</td>
                       <td className="border border-gray-200 px-3 py-2 text-center text-yellow-500 font-bold">{sank}人</td>
                       <td className="border border-gray-200 px-3 py-2 text-center text-red-400 font-bold">{batu}人</td>
-                      <td className="border border-gray-200 px-3 py-2 text-center text-2xl">
-                        {isBest ? "○" : ""}
-                      </td>
                     </tr>
                   );
                 })}
@@ -148,7 +134,7 @@ const formatDate = (dateStr: string) => {
                   {responses.map((r, i) => (
                     <td key={i} className="border border-gray-200 px-3 py-2 text-gray-500 text-xs">{r.comment}</td>
                   ))}
-                  <td className="border border-gray-200 px-3 py-2" colSpan={4} />
+                  <td className="border border-gray-200 px-3 py-2" colSpan={3} />
                 </tr>
               </tbody>
             </table>
@@ -187,7 +173,7 @@ const formatDate = (dateStr: string) => {
               <label className="block text-sm font-medium text-gray-700 mb-2">日程候補</label>
               {dates.map((date, index) => (
                 <div key={index} className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-gray-600">{date}</span>
+                  <span className="text-sm text-gray-600">{formatDate(date)}</span>
                   <div className="flex gap-2">
                     {["○", "△", "×"].map((mark) => (
                       <button
