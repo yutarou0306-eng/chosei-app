@@ -72,7 +72,14 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
   };
 
   if (!event) return <div className="p-8 text-center text-gray-500">読み込み中...</div>;
-
+const formatDate = (dateStr: string) => {
+  const datePart = dateStr.split(" ")[0];
+  const timePart = dateStr.includes(" ") ? " " + dateStr.split(" ")[1] : "";
+  const [year, month, day] = datePart.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  const youbi = ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
+  return `${month}月${day}日（${youbi}）${timePart}`;
+};
   const dates: string[] = JSON.parse(event.dates);
 
   const getBestIndex = () => {
