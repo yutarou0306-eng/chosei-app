@@ -127,12 +127,23 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
     return { maru, sank, batu };
   };
 
-  const getBestIndices = () => {
-    let best = -1;
+  // ○のみ最多のインデックス
+  const getMaruBestIndices = () => {
+    let best = 0;
+    dates.forEach((_, i) => {
+      const { maru } = getStats(i);
+      if (maru > best) best = maru;
+    });
+    if (best === 0) return [];
+    return dates.map((_, i) => getStats(i).maru === best ? i : -1).filter(i => i !== -1);
+  };
+
+  // ○+△最多のインデックス
+  const getCombinedBestIndices = () => {
+    let best = 0;
     dates.forEach((_, i) => {
       const { maru, sank } = getStats(i);
-      const score = maru + sank;
-      if (score > best) best = score;
+      if (maru + sank > best) best = maru + sank;
     });
     if (best === 0) return [];
     return dates.map((_, i) => {
@@ -141,7 +152,20 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
     }).filter(i => i !== -1);
   };
 
-  const bestIndices = responses.length > 0 ? getBestIndices() : [];
+  const maruBestIndices = responses.length > 0 ? getMaruBestIndices() : [];
+  const combinedBestIndices = responses.length > 0 ? getCombinedBestIndices() : [];
+
+  const getRowStyle = (i: number) => {
+    if (maruBestIndices.includes(i)) return "bg-green-50";
+    if (combinedBestIndices.includes(i)) return "bg-yellow-50";
+    return "";
+  };
+
+  const getRowIcon = (i: number) => {
+    if (maruBestIndices.includes(i)) return <span className="text-green-500 mr-1">★</span>;
+    if (combinedBestIndices.includes(i)) return <span className="text-yellow-500 mr-1">☆</span>;
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -178,7 +202,11 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
           )}
 
           <h2 className="text-xl font-bold text-gray-800 mb-1">{event.title}</h2>
-          <p className="text-gray-400 text-sm mb-4">回答者 {responses.length}名　<span className="text-xs text-gray-400">（名前をクリックで修正）</span></p>
+          <p className="text-gray-400 text-sm mb-2">回答者 {responses.length}名　<span className="text-xs text-gray-400">（名前をクリックで修正）</span></p>
+          <div className="flex gap-4 text-xs text-gray-500 mb-4">
+            <span><span className="text-green-500">★</span> ○が最多</span>
+            <span><span className="text-yellow-500">☆</span> ○＋△が最多</span>
+          </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
@@ -203,11 +231,10 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
               <tbody>
                 {dates.map((date, i) => {
                   const { maru, sank, batu } = getStats(i);
-                  const isBest = bestIndices.includes(i);
                   return (
-                    <tr key={i} className={isBest ? "bg-yellow-50" : ""}>
+                    <tr key={i} className={getRowStyle(i)}>
                       <td className="border border-gray-200 px-3 py-2 font-medium text-gray-700 whitespace-nowrap">
-                        {isBest && <span className="text-yellow-500 mr-1">★</span>}
+                        {getRowIcon(i)}
                         {formatDate(date)}
                       </td>
                       <td className="border border-gray-200 px-3 py-2 text-center text-green-600 font-bold">{maru}人</td>
