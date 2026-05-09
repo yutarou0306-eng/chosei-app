@@ -120,6 +120,25 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
 
   const dates: string[] = JSON.parse(event.dates);
 
+  const getStats = (i: number) => {
+    const maru = responses.filter((r) => JSON.parse(r.answers)[i] === "○").length;
+    const sank = responses.filter((r) => JSON.parse(r.answers)[i] === "△").length;
+    const batu = responses.filter((r) => JSON.parse(r.answers)[i] === "×").length;
+    return { maru, sank, batu };
+  };
+
+  const getBestIndex = () => {
+    let best = -1, bestIndex = -1;
+    dates.forEach((_, i) => {
+      const { maru, sank } = getStats(i);
+      const score = maru + sank;
+      if (score > best) { best = score; bestIndex = i; }
+    });
+    return bestIndex;
+  };
+
+  const bestIndex = responses.length > 0 ? getBestIndex() : -1;
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-3xl mx-auto">
@@ -162,6 +181,9 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
               <thead>
                 <tr className="bg-gray-50">
                   <th className="border border-gray-200 px-3 py-2 text-left text-gray-600 whitespace-nowrap">日程</th>
+                  <th className="border border-gray-200 px-3 py-2 text-green-600">○</th>
+                  <th className="border border-gray-200 px-3 py-2 text-yellow-500">△</th>
+                  <th className="border border-gray-200 px-3 py-2 text-red-400">×</th>
                   {responses.map((r, i) => (
                     <th key={i} className="border border-gray-200 px-3 py-2 text-gray-600 whitespace-nowrap">
                       <button
@@ -172,19 +194,21 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
                       </button>
                     </th>
                   ))}
-                  <th className="border border-gray-200 px-3 py-2 text-green-600">○</th>
-                  <th className="border border-gray-200 px-3 py-2 text-yellow-500">△</th>
-                  <th className="border border-gray-200 px-3 py-2 text-red-400">×</th>
                 </tr>
               </thead>
               <tbody>
                 {dates.map((date, i) => {
-                  const maru = responses.filter((r) => JSON.parse(r.answers)[i] === "○").length;
-                  const sank = responses.filter((r) => JSON.parse(r.answers)[i] === "△").length;
-                  const batu = responses.filter((r) => JSON.parse(r.answers)[i] === "×").length;
+                  const { maru, sank, batu } = getStats(i);
+                  const isBest = i === bestIndex;
                   return (
-                    <tr key={i}>
-                      <td className="border border-gray-200 px-3 py-2 font-medium text-gray-700 whitespace-nowrap">{formatDate(date)}</td>
+                    <tr key={i} className={isBest ? "bg-yellow-50" : ""}>
+                      <td className="border border-gray-200 px-3 py-2 font-medium text-gray-700 whitespace-nowrap">
+                        {isBest && <span className="text-yellow-500 mr-1">★</span>}
+                        {formatDate(date)}
+                      </td>
+                      <td className="border border-gray-200 px-3 py-2 text-center text-green-600 font-bold">{maru}人</td>
+                      <td className="border border-gray-200 px-3 py-2 text-center text-yellow-500 font-bold">{sank}人</td>
+                      <td className="border border-gray-200 px-3 py-2 text-center text-red-400 font-bold">{batu}人</td>
                       {responses.map((r, j) => {
                         const a = JSON.parse(r.answers)[i];
                         return (
@@ -195,18 +219,15 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
                           }`}>{a}</td>
                         );
                       })}
-                      <td className="border border-gray-200 px-3 py-2 text-center text-green-600 font-bold">{maru}人</td>
-                      <td className="border border-gray-200 px-3 py-2 text-center text-yellow-500 font-bold">{sank}人</td>
-                      <td className="border border-gray-200 px-3 py-2 text-center text-red-400 font-bold">{batu}人</td>
                     </tr>
                   );
                 })}
                 <tr className="bg-gray-50">
                   <td className="border border-gray-200 px-3 py-2 text-gray-600 font-medium">コメント</td>
+                  <td className="border border-gray-200 px-3 py-2" colSpan={3} />
                   {responses.map((r, i) => (
                     <td key={i} className="border border-gray-200 px-3 py-2 text-gray-500 text-xs">{r.comment}</td>
                   ))}
-                  <td className="border border-gray-200 px-3 py-2" colSpan={3} />
                 </tr>
               </tbody>
             </table>
@@ -228,7 +249,6 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
           </div>
         </div>
 
-        {/* 修正フォーム */}
         {editingResponse && (
           <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
             <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2">✏️ {editingResponse.name} の回答を修正</h3>
@@ -293,7 +313,6 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
           </div>
         )}
 
-        {/* 新規入力フォーム */}
         {showForm && (
           <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
             <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2">出欠を入力する</h3>
