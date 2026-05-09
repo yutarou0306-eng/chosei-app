@@ -127,17 +127,21 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
     return { maru, sank, batu };
   };
 
-  const getBestIndex = () => {
-    let best = -1, bestIndex = -1;
+  const getBestIndices = () => {
+    let best = -1;
     dates.forEach((_, i) => {
       const { maru, sank } = getStats(i);
       const score = maru + sank;
-      if (score > best) { best = score; bestIndex = i; }
+      if (score > best) best = score;
     });
-    return bestIndex;
+    if (best === 0) return [];
+    return dates.map((_, i) => {
+      const { maru, sank } = getStats(i);
+      return maru + sank === best ? i : -1;
+    }).filter(i => i !== -1);
   };
 
-  const bestIndex = responses.length > 0 ? getBestIndex() : -1;
+  const bestIndices = responses.length > 0 ? getBestIndices() : [];
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -199,7 +203,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
               <tbody>
                 {dates.map((date, i) => {
                   const { maru, sank, batu } = getStats(i);
-                  const isBest = i === bestIndex;
+                  const isBest = bestIndices.includes(i);
                   return (
                     <tr key={i} className={isBest ? "bg-yellow-50" : ""}>
                       <td className="border border-gray-200 px-3 py-2 font-medium text-gray-700 whitespace-nowrap">
