@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "./supabase";
@@ -97,6 +97,7 @@ export default function Home() {
   const [time, setTime] = useState("19:00〜");
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -149,11 +150,26 @@ export default function Home() {
     setLoading(false);
   };
 
+  const handleCopyTopLink = () => {
+    navigator.clipboard.writeText(window.location.origin);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl shadow-md p-4 sm:p-8 mb-6">
-<h1 style={{ fontFamily: "'Nunito', sans-serif" }} className="text-2xl font-bold text-green-600 mb-6 text-center">📅 調整くん</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-green-600">📅 調整くん</h1>
+            <button
+              onClick={handleCopyTopLink}
+              className="text-sm text-green-500 border border-green-300 rounded-lg px-3 py-1 hover:bg-green-50 transition"
+            >
+              {copied ? "✅ コピーしました！" : "🔗 リンクをコピー"}
+            </button>
+          </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">イベント名</label>
             <input
