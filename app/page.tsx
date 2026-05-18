@@ -86,7 +86,24 @@ type Event = {
   id: number;
   title: string;
   slug: string;
+  dates: string;
   created_at: string;
+};
+
+const formatEventDates = (datesJson: string) => {
+  try {
+    const dates: string[] = JSON.parse(datesJson);
+    if (dates.length === 0) return "";
+    const first = dates[0].split(" ")[0];
+    const last = dates[dates.length - 1].split(" ")[0];
+    const [, fm, fd] = first.split("-").map(Number);
+    const [, lm, ld] = last.split("-").map(Number);
+    if (first === last) return `${fm}月${fd}日`;
+    if (fm === lm) return `${fm}月${fd}日〜${ld}日`;
+    return `${fm}月${fd}日〜${lm}月${ld}日`;
+  } catch {
+    return "";
+  }
 };
 
 export default function Home() {
@@ -220,7 +237,7 @@ export default function Home() {
                         className="text-left border border-gray-200 rounded-xl px-3 py-2 hover:border-green-400 hover:bg-green-50 transition"
                       >
                         <div className="font-medium text-gray-800 text-sm">{event.title}</div>
-                        <div className="text-xs text-gray-400">{new Date(event.created_at).toLocaleDateString("ja-JP")}</div>
+                        <div className="text-xs text-gray-400">{formatEventDates(event.dates)}</div>
                       </button>
                     ))}
                   </div>
