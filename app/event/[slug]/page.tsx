@@ -72,7 +72,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
 
   const handleSubmit = async () => {
     if (!name || !event) return;
-    await supabase.from("responses").insert({
+    await supabase.from("chosei_responses").insert({
       event_id: event.id,
       name,
       answers: JSON.stringify(answers),
