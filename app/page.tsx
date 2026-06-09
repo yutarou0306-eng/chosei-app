@@ -57,7 +57,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
       setEvent(eventData);
       setAnswers(JSON.parse(eventData.dates).map(() => "×"));
       const { data: responseData } = await supabase
-        .from("responses")
+        .from("chosei_responses")
         .select("*")
         .eq("event_id", eventData.id);
       setResponses(responseData || []);
@@ -72,7 +72,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
 
   const handleSubmit = async () => {
     if (!name || !event) return;
-    await supabase.from("responses").insert({
+    await supabase.from("chosei_responses").insert({
       event_id: event.id,
       name,
       answers: JSON.stringify(answers),
@@ -89,7 +89,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
 
   const handleDelete = async () => {
     if (!event) return;
-    await supabase.from("responses").delete().eq("event_id", event.id);
+    await supabase.from("chosei_responses").delete().eq("event_id", event.id);
     await supabase.from("chosei_events").delete().eq("id", event.id);
     router.push("/");
   };
@@ -103,7 +103,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
 
   const handleEditSave = async () => {
     if (!editingResponse) return;
-    await supabase.from("responses").update({
+    await supabase.from("chosei_responses").update({
       answers: JSON.stringify(editAnswers),
       comment: editComment,
     }).eq("id", editingResponse.id);
@@ -112,7 +112,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
   };
 
   const handleDeleteResponse = async (responseId: number) => {
-    await supabase.from("responses").delete().eq("id", responseId);
+    await supabase.from("chosei_responses").delete().eq("id", responseId);
     setEditingResponse(null);
     loadEvent();
   };
