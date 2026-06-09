@@ -48,7 +48,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
 
   const loadEvent = async () => {
     const { data: eventData } = await supabase
-      .from("events")
+      .from("chosei_events")
       .select("*")
       .eq("slug", slug)
       .single();
@@ -90,7 +90,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
   const handleDelete = async () => {
     if (!event) return;
     await supabase.from("responses").delete().eq("event_id", event.id);
-    await supabase.from("events").delete().eq("id", event.id);
+    await supabase.from("chosei_events").delete().eq("id", event.id);
     router.push("/");
   };
 
